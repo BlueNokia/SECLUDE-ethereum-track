@@ -3,7 +3,7 @@
 <b>Renting out HDD Space</b><br>
 Problems:
 1. Ever ran out of space on your PC and withheld to do a task?
-2. Worried about the security of your data on the cloud despite the promises made by the companies? (A) javascript:nicTemp();
+2. Worried about the security of your data on the cloud despite the promises made by the companies?
 3. Are cloud services affordable?
 4. Felt jaded because of the retrieval speed of data from the cloud?
 Solutions:
