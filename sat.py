@@ -58,15 +58,15 @@ loops = 0
 
 def check(a , b):
     #print('Entered Check Function\n')
-    c = len( set(a) - set(b) )
-    print(c , '\n')
-    if c>0:
+    if len(a) == len(b):
+        return 0
+    c = len( set(a) - set(b))
+    #print('c is: ' , c , '\n')
+    if c > 0:
         return 1
-    elif c<0:
-        return -1
     else:
         return 0
-def upload(bucketName , a):
+def upload(bucketName , a1):
     #print('Entered Upload Function\n')
     #Finding ports that are listening
     listen = []
@@ -78,9 +78,9 @@ def upload(bucketName , a):
     selected = select_port(listen) #Complete Function
     #print(listen)
 
-    a = [y for y in a if (re.search(".zip" , y.object_name)) ]
+    a1 = [y for y in a1 if not (re.search(".txt" , y.object_name)) ]
 
-    for obj in a:
+    for obj in a1:
         reqname = list((obj.object_name).split("."))[0]
         path = '../client/data/'
         client.fget_object(bucketName , obj.object_name , path+obj.object_name)
@@ -90,26 +90,47 @@ def upload(bucketName , a):
         fname = "../client/text/" + reqname +".txt"
         meta = client.stat_object(bucketName , obj.object_name)
         file = open(fname , 'w')
-        file.write(str(meta.object_name) + '\n' + str(meta.bucket_name) + '\n' +  str(meta.size))
+        file.write(str(meta.object_name) + ' ' + str(meta.bucket_name) + ' ' +  str(meta.size))
         for selected_host in selected:
-            file.write('\n' + str(selected_host))
+            file.write(' ' + str(selected_host))
         file.close()
         client.fput_object(bucketName , (reqname+".txt") , fname)
         print( (reqname+".txt") , ' uploaded')
-        print(obj.object_name , ' removed')
-        client.remove_object(bucketName , obj.object_name)
-    try:
-        for testHost in host:
-            testHost.make_bucket(bucketName)
-            print('Created bucket ' , bucketName , ' in ' , testHost)  
-    except:
-        pass
+        #print(obj.object_name , ' removed')
 
-        # Getting the folder name from zip file
-        #print(reqname)
-        
+        #Code for splitting
+        arg = "mkdir /home/captainlazarus/hackfest/client/split_data/" + reqname
+        subprocess.call(arg , shell = True)
+
+        # arg = 'mv ../client/data/' + obj.object_name + ' /home/captainlazarus/hackfest/client/split_data/'+reqname
+        # subprocess.run(arg , shell=True)
+
+        arg = 'split -b 15k /home/captainlazarus/hackfest/client/data/' + obj.object_name + ' ' + reqname[::-1]
+        subprocess.call(arg , shell=True)
+
+        arg = 'mv ' + reqname + '* ' + '/home/captainlazarus/hackfest/client/split_data/' + reqname
+        subprocess.call(arg , shell=True)
+
+        # subprocess.run(
+        #     "cd /home/captainlazarus/hackfest/codes" , shell=True
+        # )
+
+        #arg = 'cat ' + reqname + '* >' + obj.object_name
+        # arg = ''
+        # subprocess.call(arg , shell=True)
+
+        ######Dont cross
+
         dirpath = '../client/split_data/'+reqname
         a = os.listdir(dirpath)
+        #print(a)
+
+        try:
+            for testHost in host:
+                testHost.make_bucket(bucketName)
+                print('Created bucket ' , bucketName , ' in ' , testHost)  
+        except:
+            pass
 
         sum = 0
         for x in range(len(host)):
@@ -117,15 +138,51 @@ def upload(bucketName , a):
             for k in range(sum,sum+z):
                 #print(k)
                 path = ('../client/split_data/' + reqname + '/' + a[k])
-                host[x].fput_object(y.bucket_name , a[k] , path)
+                host[x].fput_object(bucketName , a[k] , path)
             sum += z 
 
+        print(obj.object_name , ' removed')
+        client.remove_object(bucketName , obj.object_name)    
 
-
+    
 
 def download(a):
     for k in a:
-        print(k.object_name)
+        #print(k.object_name)
+        fname = list((k.object_name).split('.'))[0]
+        print(fname)
+        fpath =  '/home/captainlazarus/hackfest/client/text/'+fname+'.txt'
+        file = open(fpath , 'r')
+        meta = file.readlines(100000)
+        #print('Meta is: ' , meta)
+        meta = meta[0].split()
+        #print('Meta is: ' , meta)
+        ports = meta[3:]
+        for Host in host:
+            #print(meta)
+            objects = Host.list_objects(meta[1])    #List from bucket
+            #print(1)
+            objects = [x for x in objects if (re.match(fname , x.object_name))] #Find matching file segments
+            #print(2)
+            #print()
+            #print()
+            # print(objects)
+            # print()
+            # print()
+            for z in objects:   #Download File segments
+                #print(z.object_name)
+                # try:
+                #     subprocess.call('mkdir /home/captainlazarus/hackfest/host/'+fname)
+                # except:
+                #     pass
+                opath = '/home/captainlazarus/hackfest/host/'+z.object_name
+                Host.fget_object(meta[1] , z.object_name , opath)
+        # dirpath = '../host'
+        #a  os.listdir(dirpath)
+        arg = 'cat /home/captainlazarus/hackfest/host/' + fname + '*>' +  z.object_name
+        subprocess.run(arg , shell=True)
+
+    
 
 #Global
 objectList = []
@@ -133,23 +190,27 @@ objectList = []
 while flag:
 
     clientBuckets = client.list_buckets()
+    #print(clientBuckets[0].name)
     updatedList = list(client.list_objects(clientBuckets[0].name))
 
     # for x in updatedList:
     #     print(x.object_name)
-
-
-    c1 = check(updatedList , objectList)
-
-    # for x in updatedList:
+    # for x in objectList:
     #     print(x.object_name)
 
+    c1 = check(updatedList , objectList)
+    c2 = check(objectList , updatedList)
+    # for x in updatedList:
+    #     print(x.object_name)
+    #print("c1 is: " , c1)
+    #print("c2 is: " , c2)
     if c1 == 1:
         # for x in updatedList:
         #     print(x.object_name)
         upload(clientBuckets[0].name , updatedList)
-    elif c1 == -1:
+    elif c2 == 1:
         a = list( set(objectList) - set(updatedList) )
+        print("a is: " , a)
         download(a)
 
 
@@ -158,7 +219,7 @@ while flag:
     #After the loop ends
 
     loops+=1
-    if loops == 1:
+    if loops == 0:
         flag = False
         buck = host[1].list_buckets()
         for x in buck:
@@ -176,7 +237,7 @@ while flag:
             host[0].remove_bucket(x.name)
 
 
-    time.sleep(1)
+    time.sleep(3)
     #Replace by general code
 
 
