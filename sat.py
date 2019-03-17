@@ -105,7 +105,7 @@ def upload(bucketName , a1):
         # arg = 'mv ../client/data/' + obj.object_name + ' /home/captainlazarus/hackfest/client/split_data/'+reqname
         # subprocess.run(arg , shell=True)
 
-        arg = 'split -b 15k /home/captainlazarus/hackfest/client/data/' + obj.object_name + ' ' + reqname[::-1]
+        arg = 'split -b 15k /home/captainlazarus/hackfest/client/data/' + obj.object_name + ' ' + reqname
         subprocess.call(arg , shell=True)
 
         arg = 'mv ' + reqname + '* ' + '/home/captainlazarus/hackfest/client/split_data/' + reqname
@@ -146,7 +146,7 @@ def upload(bucketName , a1):
 
     
 
-def download(a):
+def download(bucketName , a):
     for k in a:
         #print(k.object_name)
         fname = list((k.object_name).split('.'))[0]
@@ -179,10 +179,11 @@ def download(a):
                 Host.fget_object(meta[1] , z.object_name , opath)
         # dirpath = '../host'
         #a  os.listdir(dirpath)
-        arg = 'cat /home/captainlazarus/hackfest/host/' + fname + '*>' +  z.object_name
+        arg = 'cat /home/captainlazarus/hackfest/host/' + fname + '*> ' +  (fname+'.zip')
         subprocess.run(arg , shell=True)
 
-    
+        client.fput_object(bucketName , (fname+'.zip') , '/home/captainlazarus/hackfest/codes/'+(fname+'.zip'))
+
 
 #Global
 objectList = []
@@ -210,8 +211,8 @@ while flag:
         upload(clientBuckets[0].name , updatedList)
     elif c2 == 1:
         a = list( set(objectList) - set(updatedList) )
-        print("a is: " , a)
-        download(a)
+        #print("a is: " , a)
+        download(clientBuckets[0].name , a)
 
 
     objectList = updatedList
