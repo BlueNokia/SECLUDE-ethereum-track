@@ -13,5 +13,5 @@ Impact:<br>
 Our idea will affect general public, especially at a time when the need for data privacy and security is at an all time high. The day to day struggle of running out of space will come to an end in a much cheap, safe and transparent method than anything this world has seen thus far.
 In the coming future our idea will go hand in hand with other evergrowing technologies without affecting the pockets of a common man.
 
-(A) https://cloudscene.com/news/2018/07/data-breaches-in-2018/
+(A) https://cloudscene.com/news/2018/07/data-breaches-in-2018/<br>
 (B) https://digitalguardian.com/blog/6-security-risks-enterprises-using-cloud-storage-and-file-sharing-apps
